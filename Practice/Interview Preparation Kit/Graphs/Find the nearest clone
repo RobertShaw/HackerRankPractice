@@ -1,1 +1,120 @@
-test
+import java.io.*;
+import java.math.*;
+import java.security.*;
+import java.text.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.regex.*;
+
+public class Solution {
+
+    // Complete the findShortest function below.
+
+    /*
+     * For the unweighted graph, <name>:
+     *
+     * 1. The number of nodes is <name>Nodes.
+     * 2. The number of edges is <name>Edges.
+     * 3. An edge exists between <name>From[i] to <name>To[i].
+     *
+     */
+    static int findShortest(int graphNodes, int[] graphFrom, int[] graphTo, long[] ids, int val, BufferedWriter writer)  throws IOException  {
+        // solve here
+        //Check to see if there are multiple instances of color ids[val]
+
+        if(Arrays.stream(ids).filter(l -> l == ids[val-1]).count() < 2){
+          return -1;
+        }
+        HashMap<Integer, Set<Integer>> connections = new HashMap<Integer,  Set<Integer>>();
+        for(int i = 0; i < graphFrom.length; i ++){
+          Set<Integer> connection = connections.getOrDefault(graphFrom[i], new HashSet<Integer>());
+          connection.add(graphTo[i]);
+          connections.put(graphFrom[i], connection);
+        }
+        for(int i = 0; i < graphFrom.length; i ++){
+          Set<Integer> connection = connections.getOrDefault(graphTo[i], new HashSet<Integer>());
+          connection.add(graphFrom[i]);
+          connections.put(graphTo[i], connection);
+        }
+        
+        Set<Integer> seenCheckedLongs = new HashSet<Integer>();
+        Set<Integer> seenUncheckedLongs = new HashSet<Integer>();
+        Set<Integer> newSeenUncheckedLongs = new HashSet<Integer>();
+   
+   
+        seenUncheckedLongs.add(val);
+        int count = 0;
+        int prevCheckedSize = 0;
+        boolean foundSameColor = false;
+
+        do {
+          prevCheckedSize = seenCheckedLongs.size();
+
+          Iterator<Integer> uncheckedLongIterator = seenUncheckedLongs.iterator();
+          while(uncheckedLongIterator.hasNext()){
+            Integer nextToCheck = uncheckedLongIterator.next();
+
+            if(ids[nextToCheck-1] == ids[val-1] && nextToCheck != val){
+                foundSameColor = true;
+                break;
+            }
+            newSeenUncheckedLongs.addAll(connections.getOrDefault(nextToCheck, new HashSet<Integer>()));
+            
+            seenCheckedLongs.add(nextToCheck);
+              
+            uncheckedLongIterator.remove();
+          }
+          seenUncheckedLongs = newSeenUncheckedLongs;
+          newSeenUncheckedLongs = new HashSet<Integer>();
+          if(foundSameColor){
+              break;
+          }
+          count++;
+          
+        } while(prevCheckedSize != seenCheckedLongs.size());
+        
+        return foundSameColor ? count : -1;
+
+    }
+
+    private static final Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) throws IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(System.getenv("OUTPUT_PATH")));
+
+        String[] graphNodesEdges = scanner.nextLine().split(" ");
+        int graphNodes = Integer.parseInt(graphNodesEdges[0].trim());
+        int graphEdges = Integer.parseInt(graphNodesEdges[1].trim());
+
+        int[] graphFrom = new int[graphEdges];
+        int[] graphTo = new int[graphEdges];
+
+        for (int i = 0; i < graphEdges; i++) {
+            String[] graphFromTo = scanner.nextLine().split(" ");
+            graphFrom[i] = Integer.parseInt(graphFromTo[0].trim());
+            graphTo[i] = Integer.parseInt(graphFromTo[1].trim());
+        }
+
+        long[] ids = new long[graphNodes];
+
+        String[] idsItems = scanner.nextLine().split(" ");
+        scanner.skip("(\r\n|[\n\r\u2028\u2029\u0085])?");
+
+        for (int i = 0; i < graphNodes; i++) {
+            long idsItem = Long.parseLong(idsItems[i]);
+            ids[i] = idsItem;
+        }
+
+        int val = scanner.nextInt();
+        scanner.skip("(\r\n|[\n\r\u2028\u2029\u0085])?");
+
+        int ans = findShortest(graphNodes, graphFrom, graphTo, ids, val, bufferedWriter);
+
+        bufferedWriter.write(String.valueOf(ans));
+        bufferedWriter.newLine();
+
+        bufferedWriter.close();
+
+        scanner.close();
+    }
+}
