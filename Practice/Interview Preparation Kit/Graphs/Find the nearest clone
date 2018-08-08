@@ -18,63 +18,46 @@ public class Solution {
      * 3. An edge exists between <name>From[i] to <name>To[i].
      *
      */
-    static int findShortest(int graphNodes, int[] graphFrom, int[] graphTo, long[] ids, int val, BufferedWriter writer)  throws IOException  {
+
+    static int findShortest(int graphNodes, int[] graphFrom, int[] graphTo, long[] ids, int val)  throws IOException  {
         // solve here
         //Check to see if there are multiple instances of color ids[val]
-
+        //This if statement allows some test cases to pass that would normally timeout
         if(Arrays.stream(ids).filter(l -> l == ids[val-1]).count() < 2){
           return -1;
         }
+        
         HashMap<Integer, Set<Integer>> connections = new HashMap<Integer,  Set<Integer>>();
         for(int i = 0; i < graphFrom.length; i ++){
           Set<Integer> connection = connections.getOrDefault(graphFrom[i], new HashSet<Integer>());
           connection.add(graphTo[i]);
           connections.put(graphFrom[i], connection);
+          Set<Integer> opposingConnection = connections.getOrDefault(graphTo[i], new HashSet<Integer>());
+          opposingConnection.add(graphFrom[i]);
+          connections.put(graphTo[i], opposingConnection);
         }
-        for(int i = 0; i < graphFrom.length; i ++){
-          Set<Integer> connection = connections.getOrDefault(graphTo[i], new HashSet<Integer>());
-          connection.add(graphFrom[i]);
-          connections.put(graphTo[i], connection);
-        }
-        
-        Set<Integer> seenCheckedLongs = new HashSet<Integer>();
-        Set<Integer> seenUncheckedLongs = new HashSet<Integer>();
-        Set<Integer> newSeenUncheckedLongs = new HashSet<Integer>();
-   
-   
-        seenUncheckedLongs.add(val);
-        int count = 0;
-        int prevCheckedSize = 0;
-        boolean foundSameColor = false;
 
-        do {
-          prevCheckedSize = seenCheckedLongs.size();
-
-          Iterator<Integer> uncheckedLongIterator = seenUncheckedLongs.iterator();
-          while(uncheckedLongIterator.hasNext()){
-            Integer nextToCheck = uncheckedLongIterator.next();
-
-            if(ids[nextToCheck-1] == ids[val-1] && nextToCheck != val){
-                foundSameColor = true;
-                break;
+        LinkedList<int[]> queue = new LinkedList<int[]>();
+        boolean[] seen = new boolean[graphNodes];
+        int[] firstNode = new int[]{val, 0};
+        queue.addLast(firstNode);
+        seen[val-1] = true;
+        while(queue.peek() != null){
+          int[] currentNode = queue.removeFirst();
+          if(ids[currentNode[0]-1] == ids[val-1] && currentNode[1] != 0){
+            return currentNode[1];
+          }
+          seen[currentNode[0]-1] = true;
+          Set<Integer> neighbors = connections.getOrDefault(currentNode[0], new HashSet<Integer>());
+          for(int next : neighbors){
+            if(!seen[next-1]){
+                queue.addLast(new int[]{next, currentNode[1]+1});
+                seen[next-1] = true;
             }
-            newSeenUncheckedLongs.addAll(connections.getOrDefault(nextToCheck, new HashSet<Integer>()));
-            
-            seenCheckedLongs.add(nextToCheck);
-              
-            uncheckedLongIterator.remove();
           }
-          seenUncheckedLongs = newSeenUncheckedLongs;
-          newSeenUncheckedLongs = new HashSet<Integer>();
-          if(foundSameColor){
-              break;
-          }
-          count++;
-          
-        } while(prevCheckedSize != seenCheckedLongs.size());
+        } 
         
-        return foundSameColor ? count : -1;
-
+        return -1;
     }
 
     private static final Scanner scanner = new Scanner(System.in);
