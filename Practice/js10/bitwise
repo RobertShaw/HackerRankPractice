@@ -1,0 +1,54 @@
+'use strict';
+
+process.stdin.resume();
+process.stdin.setEncoding('utf-8');
+
+let inputString = '';
+let currentLine = 0;
+
+process.stdin.on('data', inputStdin => {
+    inputString += inputStdin;
+});
+
+process.stdin.on('end', _ => {
+    inputString = inputString.trim().split('\n').map(string => {
+        return string.trim();
+    });
+    
+    main();    
+});
+
+function readLine() {
+    return inputString[currentLine++];
+}
+
+function getMaxLessThanK(n,k){
+
+    var num = n > k ? k : n;
+    var bitShift = 1;
+    if(num == 2 && n > 2){
+        return 1;
+    }else if(num == 2){
+        return 0;
+    }
+    var bitMaxAddition = 1;
+    while((num | bitShift) != num && bitShift > 0){
+        bitShift = bitShift << 1;
+        bitMaxAddition = (bitMaxAddition << 1) + 1
+    }
+    if((bitMaxAddition | num) <= n){
+        return num -1;
+    }else{
+        return num -2;
+    }
+}
+
+function main() {
+    const q = +(readLine());
+    
+    for (let i = 0; i < q; i++) {
+        const [n, k] = readLine().split(' ').map(Number);
+        
+        console.log(getMaxLessThanK(n, k));
+    }
+}
