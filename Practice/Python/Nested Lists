@@ -1,0 +1,19 @@
+if __name__ == '__main__':
+    lowest = None
+    secondLowest = None
+    namesAndScores = []
+    for _ in range(int(input())):
+        name = input()
+        score = float(input())
+        if lowest is None or score < lowest:
+            secondLowest = lowest
+            lowest = score
+        elif (secondLowest is None or score < secondLowest) and score != lowest:
+            secondLowest = score
+            
+        namesAndScores.append([name, score])
+        
+    names = list(map(lambda y: y[0],filter(lambda x: x[1] == secondLowest, namesAndScores)))
+    names.sort()
+    print('\n'.join(names))
+    
