@@ -2,22 +2,22 @@ def solution(S):
     # write your code in Python 3.6
     s = S.split(';')
     sArray = []
-    for line in s:
-        sArray.append(line.split())
-        
+
     startingLocation = [-1,-1]
     endingLocation = [-1,-1]
+    for line in s:
+        sArray.append(line.split())
+        if startSymbol in line:
+            startingLocation = [rowNumber, line.index(startSymbol)]
+        if endSymbol in s[rowNumber]:
+            endingLocation = [rowNumber, line.index(endSymbol)]
+        
+
     startSymbol = 'O'
     endSymbol = 'T'
     
     directionStack = []
   
-    
-    for rowNumber in range(0,len(sArray)):
-        if startSymbol in s[rowNumber]:
-            startingLocation = [rowNumber, s[rowNumber].index(startSymbol)]
-        if endSymbol in s[rowNumber]:
-            endingLocation = [rowNumber, s[rowNumber].index(endSymbol)]
     if -1 in startingLocation or -1 in endingLocation:
         return -1
 
