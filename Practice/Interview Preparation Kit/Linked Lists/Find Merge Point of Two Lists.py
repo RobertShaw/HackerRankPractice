@@ -46,7 +46,7 @@ def print_singly_linked_list(node, sep, fptr):
 #     SinglyLinkedListNode next
 #
 #
-def findMergeNode(head1, head2):
+def findMergeNodeWithLimitedExtraSpace(head1, head2):
     head1Origin = head1
     head2Origin = head2
     while head1 != head2:
@@ -58,5 +58,22 @@ def findMergeNode(head1, head2):
             head2 = head1Origin
         
     return head1.data
+
+def findMergeNodeWithNSpace(head1, head2):
+    head1Origin = head1
+    head2Origin = head2
+    seenSet = set()
+    while head1:
+        seenSet.add(head1)
+        head1 = head1.next
+
+    while head2:
+        if head2 in seenSet:
+            return head2.data
+        head2 = head2.next
+        
+
+        
+    return None
 
 if __name__ == '__main__':
