@@ -1,0 +1,173 @@
+#!/bin/python3
+
+import math
+import os
+import random
+import re
+import sys
+
+# Complete the balancedForest function below.
+def balancedForest(c, edges):
+    dualEdgesMap = {}
+
+    for edge in edges:
+        edgeMapEntry = dualEdgesMap.get(edge[0], [])
+        edgeMapEntry.append(edge[1])
+        dualEdgesMap[edge[0]] = edgeMapEntry
+        edgeMapEntry = dualEdgesMap.get(edge[1], [])
+        edgeMapEntry.append(edge[0])
+        dualEdgesMap[edge[1]] = edgeMapEntry
+    
+    #Create tree
+    #print(sorted(dualEdgesMap.items(), key=lambda x:x[0]))
+    edgesMap = {}
+    unidirectionalFromNonDirectional(dualEdgesMap, edgesMap, set(), 1)
+    #print(sorted(printTree(edgesMap)))
+    #print(edgesMap)
+    treeWorths = [None for x in range(len(c))]
+    levels = [-1 for x in range(len(c))]
+    findTreeWorth(treeWorths, edgesMap, 1, c, levels, 0)
+    #print(treeWorths)
+
+    log = 1;
+    while 1 << log < len(c):
+         log += 1
+    log -= 1
+    parents = [[-1]  * (log + 1) for x in range(len(c) + 1)]
+
+
+    for parent, children in edgesMap.items():
+        for child in children:
+            parents[child][0] = parent
+
+    for j in range(1, log +1):
+        for i in range(len(c)+1):
+            if parents[i][j-1] != -1:
+                parents[i][j] = parents[parents[i][j-1]][j-1]
+    
+   
+    minimum = -1
+    for edge1Index in range(1,len(edges)):
+        for edge2Index in range(edge1Index, len(edges)+1):
+            tree1Size = treeWorths[edge1Index]
+            tree2Size = treeWorths[edge2Index]
+            originalTreeSize = treeWorths[0]
+
+            if edge1Index == edge2Index and tree1Size * 2 == originalTreeSize:
+                originalTreeSize = originalTreeSize - tree1Size
+                tree2Size = 0
+            elif edge1Index == edge2Index:
+                continue
+            elif levels[edge1Index] > levels[edge2Index] and isSubChildLog(parents, levels, edge1Index, edge2Index):
+                originalTreeSize = treeWorths[0] - tree2Size
+                tree2Size = tree2Size - tree1Size
+            elif levels[edge2Index] > levels[edge1Index] and isSubChildLog(parents, levels, edge2Index, edge1Index):
+                originalTreeSize = treeWorths[0] - tree1Size
+                tree1Size = tree1Size - tree2Size
+            elif edge1Index != edge2Index:
+                originalTreeSize = treeWorths[0] - tree1Size - tree2Size
+
+
+            #print(' '.join(str(x) for x in [edge1Index, edge2Index, tree1Size, tree2Size, originalTreeSize,isSubChild(edgesMap, edge1Index+1, edge2Index+1),isSubChild(edgesMap, edge1Index+1, edge2Index+1), isSubChildLog(parents, levels, edge1Index, edge2Index) ]))
+            if tree1Size == tree2Size and tree2Size == originalTreeSize:
+                continue
+
+            currentMinimum = -1
+            if tree1Size == tree2Size and tree1Size > originalTreeSize:
+                currentMinimum = tree1Size - originalTreeSize
+            elif tree2Size == originalTreeSize and tree2Size > tree1Size:
+                currentMinimum = tree2Size - tree1Size
+            elif originalTreeSize == tree1Size and originalTreeSize > tree2Size:
+                currentMinimum = originalTreeSize - tree2Size
+            
+            if minimum == -1 or (currentMinimum != -1 and currentMinimum < minimum):
+                minimum = currentMinimum
+
+    return minimum
+
+def unidirectionalFromNonDirectional(dualMap, uniMap, seen, index):
+    if index in seen:
+        return
+    else:
+        seen.add(index)
+        for nextChild in dualMap.get(index, []):
+        
+            if nextChild not in seen:
+                children = uniMap.get(index, [])
+                children.append(nextChild)
+                uniMap[index] = children
+                unidirectionalFromNonDirectional(dualMap, uniMap, seen, nextChild)
+
+
+def isSubChild(edgesMap, firstIndex, secondIndex):
+    if firstIndex == secondIndex:
+        return True
+
+    return any(isSubChild(edgesMap,x, secondIndex) for x in edgesMap.get(firstIndex, []))
+
+def isSubChildLog(parents, levels, firstNode, secondNode):
+    if levels[firstNode] < levels[secondNode]:
+        temp = secondNode
+        secondNode = firstNode
+        firstNode = temp
+    
+    log = 1;
+    while 1 << log < len(c):
+         log += 1
+    log -= 1
+    
+
+    while log >= 0:
+        if levels[firstNode] - (1 << log) >= levels[secondNode]:
+            firstNode = parents[firstNode+1][log] - 1
+        log = log - 1
+    
+    if firstNode == secondNode:
+        return True
+    else:
+        return False
+    
+
+
+
+def printTree(edgesMap, index = 1):
+    treeList = [index]
+
+    for value in edgesMap.get(index, []):
+        treeList.extend(printTree(edgesMap, value))
+
+    return treeList    
+
+def findTreeWorth(treeWorths, edgesMap, treeIndex, c, levels, level):
+    treeWorthIndex = treeIndex - 1
+    if treeWorths[treeWorthIndex]:
+        return treeWorths[treeWorthIndex]
+    else:
+        if levels[treeWorthIndex] == -1:
+            levels[treeWorthIndex] = level
+        treeWorth = sum(findTreeWorth(treeWorths, edgesMap, x, c, levels, level + 1) for x in edgesMap.get(treeIndex, []))
+
+        treeWorths[treeWorthIndex] = treeWorth + c[treeWorthIndex]
+        return treeWorths[treeWorthIndex]
+
+
+if __name__ == '__main__':
+    fptr = open(os.environ['OUTPUT_PATH'], 'w')
+
+    q = int(input())
+
+    for q_itr in range(q):
+        n = int(input())
+
+        c = list(map(int, input().rstrip().split()))
+
+        edges = []
+
+        for _ in range(n - 1):
+            edges.append(list(map(int, input().rstrip().split())))
+
+        result = balancedForest(c, edges)
+
+        fptr.write(str(result) + '\n')
+
+    fptr.close()
